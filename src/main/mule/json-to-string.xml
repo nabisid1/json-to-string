@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="9ab8a255-0abc-4627-b09b-d2258d81dc21" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="cdf96b1b-88dd-410b-bbf1-83a96e04a1be" >
+		<db:oracle-connection host="localhost" user="abdul" password="abdul" instance="orcl" />
+	</db:config>
+	<flow name="json-to-stringFlow" doc:id="e6e3f4cc-20ba-467e-aac2-f13c8778fe9d" >
+		<http:listener doc:name="Listener" doc:id="c06600be-002d-453b-8860-05b86881f230" config-ref="HTTP_Listener_config" path="/json-to-string"/>
+		<ee:transform doc:name="Transform Message" doc:id="9edae492-db60-44e0-825a-5fe5e3aadbc5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	result: write(payload,'application/json') as String
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<db:insert doc:name="Insert" doc:id="3056aaa3-911f-4ef7-976d-9bb1b1deb063" config-ref="Database_Config">
+			<db:sql >insert into jsonpayload values (:data)</db:sql>
+			<db:input-parameters ><![CDATA[#[{'data':payload.result}]]]></db:input-parameters>
+		</db:insert>
+	</flow>
+</mule>
